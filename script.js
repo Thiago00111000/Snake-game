@@ -1,17 +1,16 @@
-//import './style.css';
-
-//------//
+//cria tela e assets
 
 const canvas = document.getElementById('grid');
 const ctx = canvas.getContext("2d");
+const h1 = document.getElementById('score');
+const audio1 = new Audio('assets/pickupCoin.wav')
+const audio2 = new Audio('assets/hitHurt.wav')
 
+//cobra
 const size = 30;
 const snake = [
     {x: 300, y: 300},
-    {x: 330, y: 300},
-    {x: 360, y: 300},
-    {x: 390, y: 300},
-    {x: 420, y: 300}
+    {x: 330, y: 300}
 ]
 
 let direction,loopId
@@ -44,6 +43,42 @@ const moveSnake = () => {
     }
 }
 
+
+//comida
+const randomNumber = (min, max) =>{
+    return Math.round(Math.random() *  (max - min) + min)
+}
+
+const randomPosition = () =>{
+    const number = randomNumber(0, canvas.width - size)
+    return Math.round(number / 30) * 30
+}
+
+const randomColor = () => {
+    const red = randomNumber(0, 255)
+    const green = randomNumber(0, 255)
+    const blue = randomNumber(0, 255)
+    return `rgb(${red}, ${green}, ${blue})`
+}
+
+const food = {
+    x: randomPosition(),
+    y: randomPosition(),
+    color: randomColor()
+}
+
+const drawFood = () =>{
+    const {x, y, color} = food
+
+    ctx.shadowColor = color
+    ctx.shadowBlur = 10
+    ctx.fillStyle = color
+    ctx.fillRect (x, y, size, size )
+    ctx.shadowBlur = 0 
+}
+
+
+//regras do jogo
 const drawGrid = () => {
     ctx.lineWidth = 1
     ctx.strokeStyle = "#191919"
@@ -59,16 +94,61 @@ const drawGrid = () => {
         ctx.lineTo(600, i)
         ctx.stroke()
     }
+    
+}
 
+const eat = () =>{
+    const head = snake[snake.length - 1]
+
+    if (head.x == food.x && head.y == food.y){
+        snake.push(head)
+        audio1.play()
+
+        let x = randomPosition()
+        let y = randomPosition()
+
+        while(snake.find((position)=> position.x == x && position.y == y)){
+            x = randomPosition()
+            y = randomPosition()
+        }
+
+        food.x = x
+        food.y = y
+        food.color = randomColor()
+    }
+}
+
+const collision = () =>{
+    const head = snake[snake.length - 1]
+    const canvasLimit = canvas.width - size
+    const neckIndex = snake.length - 2
+
+    const wallCollision = head.x < 0 || head.x > canvasLimit || head.y < 0 || head.y > canvasLimit;
+
+    const selfCollision = snake.find((position, index) => {
+        return index < neckIndex && position.x == head.x && position.y == head.y
+    })
+
+    if(wallCollision || selfCollision){
+        audio2.play()
+        gameOver()
+    }
+}
+
+const gameOver = () => {
+    direction = undefined
 }
 
 const loop = () => {
     clearInterval(loopId)
-    ctx.clearRect(0,0,600,600)
+    ctx.clearRect(0, 0, 600, 600)
     drawGrid()
+    drawFood()
     moveSnake()
     drawSnake()
-    
+    eat()
+    collision()
+
     loopId = setTimeout(() => {
         loop()         
     }, 300);
@@ -76,6 +156,7 @@ const loop = () => {
 
 loop()
 
+//controles
 document.addEventListener("keydown", ({key}) => {
     if(key == "w" && direction  !=  "down"){
         direction = "up"
