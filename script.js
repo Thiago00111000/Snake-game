@@ -1,16 +1,25 @@
 //cria tela e assets
-
-const canvas = document.getElementById('grid');
+const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
-const h1 = document.getElementById('score');
-const audio1 = new Audio('assets/pickupCoin.wav')
-const audio2 = new Audio('assets/hitHurt.wav')
+const audio1 = new Audio('assets/pickupCoin.wav');
+const audio2 = new Audio('assets/hitHurt.wav');
+const audio3 = new Audio('assets/blipSelect.wav');
+
+//pontuação e menu
+const score = document.querySelector(".score--value");
+const finalScore = document.querySelector(".final-score > span");
+const menu = document.querySelector(".menu-screen")
+const button = document.querySelector(".button-play");
+
+const scoring = () => {
+    score.innerText = parseInt(score.innerText) + 10
+}
 
 //cobra
 const size = 30;
-const snake = [
-    {x: 300, y: 300},
-    {x: 330, y: 300}
+let snake = [
+    {x: 120, y: 300},
+    {x: 150, y: 300}
 ]
 
 let direction,loopId
@@ -77,7 +86,6 @@ const drawFood = () =>{
     ctx.shadowBlur = 0 
 }
 
-
 //regras do jogo
 const drawGrid = () => {
     ctx.lineWidth = 1
@@ -99,14 +107,15 @@ const drawGrid = () => {
 
 const eat = () =>{
     const head = snake[snake.length - 1]
-
+    
     if (head.x == food.x && head.y == food.y){
+        scoring()
         snake.push(head)
         audio1.play()
 
         let x = randomPosition()
         let y = randomPosition()
-
+        
         while(snake.find((position)=> position.x == x && position.y == y)){
             x = randomPosition()
             y = randomPosition()
@@ -122,21 +131,25 @@ const collision = () =>{
     const head = snake[snake.length - 1]
     const canvasLimit = canvas.width - size
     const neckIndex = snake.length - 2
-
+    
     const wallCollision = head.x < 0 || head.x > canvasLimit || head.y < 0 || head.y > canvasLimit;
-
+    
     const selfCollision = snake.find((position, index) => {
         return index < neckIndex && position.x == head.x && position.y == head.y
     })
-
+    
     if(wallCollision || selfCollision){
-        audio2.play()
         gameOver()
     }
 }
 
 const gameOver = () => {
     direction = undefined
+    audio2.play()
+    menu.style.display = "flex"
+    finalScore.innerText = score.innerText
+    canvas.style.filter = "blur(2px)"
+    loop() = false
 }
 
 const loop = () => {
@@ -148,10 +161,10 @@ const loop = () => {
     drawSnake()
     eat()
     collision()
-
+    
     loopId = setTimeout(() => {
         loop()         
-    }, 300);
+    }, 250);
 }
 
 loop()
@@ -171,4 +184,17 @@ document.addEventListener("keydown", ({key}) => {
         direction = "right"
     }
 })
-//cronometro
+
+button.addEventListener("click", () => {
+    audio3.play()
+    score.innerText = "00"
+    menu.style.display = "none"
+    canvas.style.filter = "none"
+    snake = [
+    {x: 120, y: 300},
+    {x: 150, y: 300}
+    ]
+    loop() = true
+})
+
+//canvas.style.filter = "grayscale(100%)"
