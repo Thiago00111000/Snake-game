@@ -194,6 +194,7 @@ button.addEventListener("click", () => {
     {x: 120, y: 300},
     {x: 150, y: 300}
     ]
+    direction = undefined
     loop() = true
 })
 
